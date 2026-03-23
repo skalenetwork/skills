@@ -7,24 +7,24 @@ Collection of installable Agent Skills for SKALE Network workflows.
 List skills available in this repo:
 
 ```bash
-npx -y skills add skalenetwork/skale-skills --list
+npx -y skills add skalenetwork/skills --list
 ```
 
 Install one skill:
 
 ```bash
-npx -y skills add skalenetwork/skale-skills --skill about-skale
-npx -y skills add skalenetwork/skale-skills --skill deploy-to-skale
-npx -y skills add skalenetwork/skale-skills --skill build-with-bite
-npx -y skills add skalenetwork/skale-skills --skill x402-on-skale
-npx -y skills add skalenetwork/skale-skills --skill ima-bridging-on-skale
-npx -y skills add skalenetwork/skale-skills --skill skale-cli
+npx -y skills add skalenetwork/skills --skill about-skale
+npx -y skills add skalenetwork/skills --skill deploy-to-skale
+npx -y skills add skalenetwork/skills --skill build-with-bite
+npx -y skills add skalenetwork/skills --skill x402-on-skale
+npx -y skills add skalenetwork/skills --skill ima-bridging-on-skale
+npx -y skills add skalenetwork/skills --skill skale-cli
 ```
 
 Install all skills from this repo:
 
 ```bash
-npx -y skills add skalenetwork/skale-skills --skill '*' --agent '*' -y
+npx -y skills add skalenetwork/skills --skill '*' --agent '*' -y
 ```
 
 ## Available Skills

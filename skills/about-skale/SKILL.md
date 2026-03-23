@@ -69,3 +69,9 @@ For privacy (BITE), see `build-with-bite` skill.
 For AI agent payments (x402), see `x402-on-skale` skill.
 
 Reference: [Docs](https://docs.skale.space)
+
+### Reference Files
+
+For more details about SKALE Chains please check:
+- **`references/chains.md`** - Complete overview on the SKALE Chains details
+- **`references/gas.md`** - Complete overview on SKALE Chains gas models, tokens and comparisions.

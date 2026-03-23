@@ -156,3 +156,11 @@ Amount is in token decimals (USDC = 6):
 - **Multi-Agent Economies**: Agent-to-agent payments for services
 
 Reference: [x402 Docs](https://docs.skale.space/get-started/agentic-builders/start-with-x402.md)
+
+
+### Reference Files
+
+For more details about x402 Payments on SKALE Base:
+- **`references/client.md`** - Client side setup to make a request to x402 paid resource 
+- **`references/server.md`** - Serber side setup to make a request to x402 paid resource 
+- **`references/tokens.md`** - Available tokens for x402 payments on SKALE Base and SKALE Base Sepolia

@@ -9,12 +9,11 @@ Authoritative source: `~/projects/skale-cli/src` (commands, chains, contracts).
 - `calypso`
 - `europa`
 - `nebula`
-- `titan`
-- `strayshot`
 - `calypso-testnet`
 - `europa-testnet`
 - `nebula-testnet`
-- `titan-testnet`
+- `skale-base`
+- `skale-base-sepolia`
 
 ### Ethereum networks (`--network`)
 
