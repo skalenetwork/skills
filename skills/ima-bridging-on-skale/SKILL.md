@@ -1,12 +1,12 @@
 ---
 name: ima-bridging-on-skale
-description: Programmatic IMA (Inter-chain Messaging Agent) bridging for SKALE chains. Use for sending and receiving messages between SKALE chains and Ethereum.
+description: Programmatic IMA (Interchain Messaging Agent) bridging for SKALE chains. Use for sending and receiving messages between SKALE chains and Ethereum.
 ---
 
 # IMA Bridging on SKALE
 
 ## Overview
-The Inter-chain Messaging Agent (IMA) enables communication between the connected chains. This includes two different bridging flows:
+The Interchain Messaging Agent (IMA) enables communication between the connected chains. This includes two different bridging flows:
 - For SKALE Ethereum-connected chains it enables data brididging communication between Ethereum and Ethereum SKALE Chains (Nebula, Europa and Calypso Hubs), as well as bettween the SKALE Chains;
 - For SKALE Base chains it enbales data bridging between Base and SKALE Base.
 IMA is designed for arbitrary message passing and contract interactions.
