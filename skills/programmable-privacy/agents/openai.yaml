@@ -1,0 +1,18 @@
+interface:
+  display_name: "Programmable Privacy"
+  short_description: "BITE Protocol for encrypted transactions, CTX, and re-encryption on SKALE"
+  icon_small: "./assets/skale-logo-small.svg"
+  icon_large: "./assets/skale-logo.png.svg"
+  brand_color: "#7B42E6"
+  default_prompt: "Implement BITE Protocol for"
+
+policy:
+  allow_implicit_invocation: true
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "skaleDocs"
+      description: "SKALE documentation"
+      transport: "https"
+      url: "https://docs.skale.space/llms.txt"
