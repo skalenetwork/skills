@@ -1,0 +1,18 @@
+interface:
+  display_name: "Programmable Privacy"
+  short_description: "Programmable privacy for encrypted transactions, conditional transactions, and and private payments on SKALE"
+  icon_small: "./assets/skale-logo-small.svg"
+  icon_small: "./assets/skale-logo-small.svg"
+  brand_color: "#000000"
+  default_prompt: "Implement programmable privacy on SKALE with"
+
+policy:
+  allow_implicit_invocation: true
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "skaleDocs"
+      description: "SKALE documentation"
+      transport: "streamable_http"
+      url: "https://docs.skale.space/mcp"

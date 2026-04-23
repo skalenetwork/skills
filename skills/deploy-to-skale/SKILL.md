@@ -165,7 +165,7 @@ Payment tokens:
 
 ## BITE (Privacy)
 
-For encrypted transactions, see `build-with-bite` skill.
+For encrypted transactions, see `programmable-privacy` skill.
 
 Key points:
 - Gas: Always set manually (300k default)

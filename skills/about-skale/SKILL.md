@@ -65,7 +65,7 @@ Uses **sFUEL** - valueless gas token. Users pay ~0, validators stake SKL to cove
 | Independence | Full | N/A | Shared |
 
 For deployment info, see `deploy-to-skale` skill.
-For privacy (BITE), see `build-with-bite` skill.
+For privacy (BITE), see `programmable-privacy` skill.
 For AI agent payments (x402), see `x402-on-skale` skill.
 
 Reference: [Docs](https://docs.skale.space)
