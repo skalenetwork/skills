@@ -8,16 +8,18 @@ tags: [bite, re-encryption, ecies, threshold-encryption]
 
 ## Why It Matters
 
-Re-encryption is the process of encrypting data onchain using either the network's threshold encryption key (`EncryptTE`) or a specific recipient's public key (`EncryptECIES`). This enables two key patterns:
+Re-encryption enables private storage onchain. There are two fundamental encryption primitives:
 
-1. **Private onchain state** — store encrypted values that only the consensus committee can decrypt (confidential-token pattern)
-2. **Data sharing** — decrypt via CTX, then re-encrypt for a specific recipient's key so only they can read it off-chain (confidential-poker pattern)
+1. **EncryptTE** (`0x1D`) — encrypts with the network's threshold key. Only the consensus committee can decrypt via CTX.
+2. **EncryptECIES** (`0x1C`) — encrypts with a specific viewer's secp256k1 public key. Only that viewer can decrypt off-chain.
+
+These combine into three patterns depending on who needs access and whether the data changes over time.
 
 ## Precompiles
 
 | Precompile | Address | Call Type | Purpose |
 |---|---|---|---|
-| `EncryptECIES` | `0x1C` | `staticcall` | Encrypt for a specific recipient's secp256k1 public key |
+| `EncryptECIES` | `0x1C` | `staticcall` | Encrypt for a specific viewer's secp256k1 public key |
 | `EncryptTE` | `0x1D` | `staticcall` | Encrypt with the network's BLS threshold key |
 | `SubmitCTX` | `0x1B` | `call` | Submit encrypted data for threshold decryption + callback |
 
@@ -27,15 +29,13 @@ Re-encryption is the process of encrypting data onchain using either the network
 import { BITE } from "@skalenetwork/bite-solidity/BITE.sol";
 import { PublicKey } from "@skalenetwork/bite-solidity/types.sol";
 
-// Threshold encryption — encrypted with network key
-// Only consensus (2t+1 nodes) can decrypt
+// Threshold encryption — only consensus (2t+1 nodes) can decrypt
 (bytes memory encrypted, ) = BITE.encryptTE(
     0x000000000000000000000000000000000000001D,
     abi.encode(value)
 );
 
-// ECIES encryption — encrypted for a specific recipient's secp256k1 key
-// Only the holder of the corresponding private key can decrypt off-chain
+// ECIES encryption — only the viewer's private key can decrypt off-chain
 (bytes memory encrypted, ) = BITE.encryptECIES(
     0x000000000000000000000000000000000000001C,
     abi.encode(value),
@@ -52,7 +52,7 @@ struct PublicKey {
 }
 ```
 
-A secp256k1 public key (uncompressed point). The recipient provides this onchain and decrypts the ciphertext off-chain with their private key.
+A secp256k1 public key (uncompressed point). The viewer generates a keypair off-chain, submits the public key onchain, and decrypts ciphertext off-chain with their private key.
 
 ## Error Codes
 
@@ -67,9 +67,9 @@ A secp256k1 public key (uncompressed point). The recipient provides this onchain
 | 7 | InvalidPublicKey | ECIES: malformed secp256k1 public key |
 | 8 | EncryptionFailed | ECIES: encryption operation failed |
 
-## Pattern 1: Private On-Chain State (Confidential Token)
+## Pattern 1: Private Onchain State (TE)
 
-Store values encrypted with `EncryptTE`. Only the consensus committee can decrypt via CTX.
+Store values encrypted with `EncryptTE`. The consensus committee can decrypt via CTX — useful when validators need to process or update the value over time (transfers, tallies, state transitions).
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -78,189 +78,113 @@ pragma solidity ^0.8.27;
 import { BITE } from "@skalenetwork/bite-solidity/BITE.sol";
 import { IBiteSupplicant } from "@skalenetwork/bite-solidity/interfaces/IBiteSupplicant.sol";
 
-contract ConfidentialBalance is IBiteSupplicant {
+contract EncryptedState is IBiteSupplicant {
     address public owner;
-    bytes public encryptedBalance;
+    bytes public encryptedValue;
 
-    constructor() {
-        owner = msg.sender;
-    }
-
-    function setBalance(uint256 balance) external {
+    function setValue(uint256 value) external {
         require(msg.sender == owner, "Only owner");
-
-        bytes memory encrypted = BITE.encryptTE(
+        (bytes memory encrypted, bool ok) = BITE.encryptTE(
             0x000000000000000000000000000000000000001D,
-            abi.encode(balance)
+            abi.encode(value)
         );
-        require(encrypted.length > 0, "Encryption failed");
-
-        encryptedBalance = encrypted;
+        require(ok, "Encryption failed");
+        encryptedValue = encrypted;
     }
 
-    // Decrypt via CTX to read the balance
-    function revealBalance() external payable {
+    function revealValue() external payable {
         require(msg.value >= 0.06 ether, "CTX payment required");
-
-        bytes[] memory encryptedArgs = new bytes[](1);
-        encryptedArgs[0] = encryptedBalance;
-
         BITE.submitCTX(
             BITE.SUBMIT_CTX_ADDRESS,
             msg.value / tx.gasprice,
-            encryptedArgs,
+            encryptedValue,
             new bytes[](0)
         );
     }
 
     function onDecrypt(
         bytes[] calldata decryptedArguments,
-        bytes[] calldata plaintextArguments
+        bytes[] calldata
     ) external override {
         require(msg.sender == BITE.SUBMIT_CTX_ADDRESS, "Only BITE");
-        uint256 balance = abi.decode(decryptedArguments[0], (uint256));
-        // Use the revealed balance
+        uint256 value = abi.decode(decryptedArguments[0], (uint256));
+        // Use the revealed value
     }
 }
 ```
 
-## Pattern 2: Data Sharing (TE → CTX Decrypt → ECIES Re-encrypt)
+## Pattern 2: Viewer-Key Storage (ECIES)
 
-Store encrypted with TE, then grant access by decrypting via CTX and re-encrypting for a specific recipient's key.
+Store values encrypted with `EncryptECIES` for a specific viewer's key. Only that viewer can decrypt off-chain. Data cannot be manipulated by validators — great for sharing sensitive data (medical records, credentials, private messages).
 
 ```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
 import { BITE } from "@skalenetwork/bite-solidity/BITE.sol";
-import { IBiteSupplicant } from "@skalenetwork/bite-solidity/interfaces/IBiteSupplicant.sol";
 import { PublicKey } from "@skalenetwork/bite-solidity/types.sol";
 
-contract EncryptedValueRegistry is IBiteSupplicant {
-    address public owner;
-    bytes public encryptedValue;
+contract ViewerEncryptedStorage {
+    mapping(bytes32 => bytes) private encryptedRecords;
 
-    struct AccessGrant {
-        PublicKey viewerKey;
-        bytes eciesCiphertext;
-        bool exists;
-    }
-
-    mapping(address => AccessGrant) public grants;
-
-    event ValueSet();
-    event AccessGranted(address indexed viewer);
-    event ValueRevealed(bytes eciesCiphertext);
-
-    constructor() {
-        owner = msg.sender;
-    }
-
-    // Store encrypted value with network threshold key
-    function setValue(uint256 value) external {
-        require(msg.sender == owner, "Only owner");
-
-        bytes memory encrypted = BITE.encryptTE(
-            0x000000000000000000000000000000000000001D,
-            abi.encode(value)
-        );
-        require(encrypted.length > 0, "TE encryption failed");
-
-        encryptedValue = encrypted;
-        emit ValueSet();
-    }
-
-    // Grant access: decrypt via CTX, re-encrypt for viewer's key
-    function grantAccess(address viewer, PublicKey calldata viewerKey) external payable {
-        require(msg.sender == owner, "Only owner");
-        require(msg.value >= 0.06 ether, "CTX payment required");
-        require(encryptedValue.length > 0, "No value set");
-
-        grants[viewer] = AccessGrant({
-            viewerKey: viewerKey,
-            eciesCiphertext: bytes(""),
-            exists: true
-        });
-
-        BITE.submitCTX(
-            BITE.SUBMIT_CTX_ADDRESS,
-            msg.value / tx.gasprice,
-            encryptedValue,
-            abi.encode(viewer)
-        );
-    }
-
-    // Called by BITE after threshold decryption
-    function onDecrypt(
-        bytes[] calldata decryptedArguments,
-        bytes[] calldata plaintextArguments
-    ) external override {
-        require(msg.sender == BITE.SUBMIT_CTX_ADDRESS, "Only BITE");
-
-        // plaintextArguments[0] = viewer address (passed unencrypted)
-        address viewer = abi.decode(plaintextArguments[0], (address));
-        require(grants[viewer].exists, "No grant");
-
-        // Re-encrypt the decrypted value with the viewer's ECIES public key
-        bytes memory eciesEncrypted = BITE.encryptECIES(
+    function storeRecord(bytes32 id, uint256 value, PublicKey calldata viewerKey) external {
+        (bytes memory encrypted, bool ok) = BITE.encryptECIES(
             0x000000000000000000000000000000000000001C,
-            decryptedArguments[0],
-            grants[viewer].viewerKey
+            abi.encode(value),
+            viewerKey
         );
-        require(eciesEncrypted.length > 0, "ECIES re-encryption failed");
-
-        grants[viewer].eciesCiphertext = eciesEncrypted;
-        emit AccessGranted(viewer);
-        emit ValueRevealed(eciesEncrypted);
+        require(ok, "Encryption failed");
+        encryptedRecords[id] = encrypted;
     }
 
-    // Viewer retrieves their ECIES-encrypted value
-    function getEncryptedValue(address viewer) external view returns (bytes memory) {
-        require(grants[viewer].exists, "No access grant");
-        require(grants[viewer].eciesCiphertext.length > 0, "Not yet decrypted");
-        return grants[viewer].eciesCiphertext;
+    function getRecord(bytes32 id) external view returns (bytes memory) {
+        return encryptedRecords[id];
     }
 }
 ```
 
-## Data Flow: TE → CTX → ECIES
+Viewer decrypts off-chain:
 
 ```
-Owner calls setValue(balance)
+Ciphertext: IV(16) || ephemeralPubKey(33) || ciphertext
+  → ECDH(privateKey, ephemeralPubKey) → sharedSecret
+  → SHA-256(sharedSecret) → AES key
+  → AES-256-CBC(AES key, IV, ciphertext) → plaintext
+```
+
+## Pattern 3: Both (TE + ECIES)
+
+Encrypt with TE for validator processing and ECIES for viewer access. The best of both — data can be manipulated by consensus when needed and privately viewed by specific keys.
+
+For a full example, see [examples/confidential-poker.md](../examples/confidential-poker.md).
+
+## Data Flow: Pattern 3 (TE → CTX → ECIES)
+
+```
+Owner calls setValue(value, viewerKey)
     │
-    └──> EncryptTE(0x1D, abi.encode(balance))
-           │
-           └──> Store encrypted bytes onchain
-                  │
-Owner calls grantAccess(viewer, pubKey)
-    │
-    └──> SubmitCTX(0x1B, encryptedValue, [viewer])
-           │
-           └──> Consensus decrypts (2t+1 nodes)
-                  │
-                  └──> onDecrypt(decryptedArguments, plaintextArguments)
-                         │
-                         ├──> Read viewer from plaintextArguments
-                         └──> EncryptECIES(0x1C, value, viewerPubKey)
-                                │
-                                └──> Store ECIES ciphertext for viewer
-                                       │
-Viewer calls getEncryptedValue(myAddress)
-    │
-    └──> Returns ECIES ciphertext
-           │
-           └──> Viewer decrypts off-chain with their private key
+    ├──> EncryptTE(0x1D, value)     → store (for validator processing)
+    └──> EncryptECIES(0x1C, value, viewerKey) → store (for viewer access)
+
+Viewer reads value anytime:
+    └──> getEncryptedValue() → ECIES ciphertext → decrypt off-chain
+
+Owner triggers processing via CTX:
+    └──> SubmitCTX(0x1B, teEncryptedValue)
+           └──> Consensus decrypts
+                  └──> onDecrypt(plaintext) → process value, re-encrypt
 ```
 
 ## Use Cases
 
 | Use Case | Pattern | Example |
 |----------|---------|---------|
-| Confidential token balances | Private state (TE) | `skalenetwork/confidential-token` |
-| Encrypted game state | Data sharing (TE→ECIES) | `thegreataxios/confidential-poker` |
-| Sealed-bid auctions | Private state + CTX reveal | Encrypted bids revealed after deadline |
-| Medical/financial records | Data sharing with consent | Grant access to specific researchers |
-| Private voting | Private state + CTX tally | Votes encrypted, tallied onchain |
+| Private voting | Pattern 1 (TE) | Votes encrypted, tallied onchain |
+| Sealed-bid auctions | Pattern 1 (TE) | Encrypted bids revealed after deadline |
+| Medical/financial records | Pattern 2 (ECIES) | Grant access to specific researchers |
+| Credentials, private messages | Pattern 2 (ECIES) | Share data without validator access |
+| Confidential token balances | Pattern 3 (Both) | `references/confidential-tokens.md` |
+| Encrypted game state | Pattern 3 (Both) | `examples/confidential-poker.md` |
 
 ## Integration Checklist
 
@@ -275,4 +199,4 @@ Viewer calls getEncryptedValue(myAddress)
 
 - **confidential-token**: `github.com/skalenetwork/confidential-token`
 - **confidential-poker**: `github.com/thegreataxios/confidential-poker`
-- **EncryptedValueRegistry example**: `github.com/skalenetwork/bite-solidity` (examples/encrypted-value-registry)
+- **EncryptedValueRegistry**: `github.com/skalenetwork/bite-solidity` (examples/)

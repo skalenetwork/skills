@@ -24,7 +24,7 @@ Threshold encryption primitives on SKALE Network. Encrypt transaction data, decr
 
 | Feature | Description | Precompile | Status | Chains |
 |---------|-------------|------------|--------|--------|
-| Encrypted Transactions | Encrypt `to` + `calldata` in mempool | Magic Address `0x...0401 | Live | SKALE Base, SKALE Base Sepolia |
+| Encrypted Transactions | Encrypt `to` + `calldata` in mempool | Magic Address `0x4249...5044` | Live | SKALE Base, SKALE Base Sepolia |
 | CTX | Conditional Transactions — decrypt onchain when triggered | `0x1B` (SubmitCTX) | Beta | SKALE Base, SKALE Base Sepolia |
 | Re-encryption & Encrypted Storage | Encrypt data onchain with network key or recipient key | `0x1D` / `0x1C` | Beta | SKALE Base, SKALE Base Sepolia |
 | Confidential Tokens | ERC20 with encrypted balances using TE + ECIES | All precompiles | Experimental (testnet only) | SKALE Base Sepolia |
@@ -57,7 +57,7 @@ Threshold encryption primitives on SKALE Network. Encrypt transaction data, decr
 
 ```solidity
 // Encrypted Transactions
-address constant BITE_MAGIC_ADDRESS = 0x0000000000000000000000000000000000000401;
+address constant BITE_MAGIC_ADDRESS = 0x42495445204D452049274d20454E435259505444;
 
 // CTX, Re-encryption, Confidential Tokens
 address constant SUBMIT_CTX = 0x000000000000000000000000000000000000001B;

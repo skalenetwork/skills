@@ -20,7 +20,7 @@ Encrypted Transactions encrypt transaction data (`to` + `calldata`) before submi
 ## Key Constants
 
 ```typescript
-const BITE_MAGIC_ADDRESS = "0x0000000000000000000000000000000000000401";
+const BITE_MAGIC_ADDRESS = "0x42495445204D452049274d20454E435259505444";
 const DEFAULT_GAS_LIMIT = 300000n;
 ```
 
@@ -84,7 +84,7 @@ User Transaction
        │        ├── 3. BLS threshold encrypt AES key
        │        └── 4. Create payload: [EPOCH_ID, ENCRYPTED_DATA]
        │
-       └───> Send to BITE magic address (0x...0401)
+       └───> Send to BITE magic address (0x4249...5044)
               └──> SKALE Validators
                      └──> Threshold decryption → execute
 ```
