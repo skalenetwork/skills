@@ -1,6 +1,8 @@
 ---
 name: x402-on-skale
 description: Build AI agents with x402 payments on SKALE. Covers facilitator setup, payment middleware, and agent client. Use for monetized AI services, agent-to-agent payments.
+metadata:
+  version: "1.0.0"
 ---
 
 # x402 on SKALE

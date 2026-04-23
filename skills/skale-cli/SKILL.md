@@ -1,6 +1,8 @@
 ---
 name: skale-cli
 description: Operational command playbooks for SKALE CLI usage from the skalenetwork/skale-cli codebase. Use when users need exact command syntax, target selection, parameter formatting, output interpretation, and error handling for read, whitelist, manager, ima, and skl commands.
+metadata:
+  version: "1.0.0"
 ---
 
 # SKALE CLI

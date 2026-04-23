@@ -1,6 +1,8 @@
 ---
 name: deploy-to-skale
 description: Deploy contracts to SKALE chains. Covers chain selection, RNG, bridge, deployment setup. Use for deploying smart contracts to SKALE.
+metadata:
+  version: "1.1.0"
 ---
 
 # Deploy to SKALE
@@ -34,9 +36,7 @@ This guide covers deploying smart contracts to SKALE chains.
 ### Foundry
 
 ```bash
-# Install Foundry if needed
-curl -L https://foundry.paradigm.xyz | bash
-foundryup
+# Install Foundry if needed — see https://www.getfoundry.sh/llms.txt
 
 # Install SKALE RNG library
 forge install dirtroad/skale-rng

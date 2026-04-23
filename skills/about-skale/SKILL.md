@@ -1,6 +1,8 @@
 ---
 name: about-skale
 description: Learn about SKALE Network - what it is, chain types, gas models. Use for understanding SKALE architecture.
+metadata:
+  version: "1.0.0"
 ---
 
 # About SKALE

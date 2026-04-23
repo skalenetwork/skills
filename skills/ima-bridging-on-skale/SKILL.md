@@ -1,6 +1,8 @@
 ---
 name: ima-bridging-on-skale
 description: Programmatic IMA (Interchain Messaging Agent) bridging for SKALE chains. Use for sending and receiving messages between SKALE chains and Ethereum.
+metadata:
+  version: "1.0.0"
 ---
 
 # IMA Bridging on SKALE
