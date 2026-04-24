@@ -16,6 +16,7 @@ Install one skill:
 npx -y skills add skalenetwork/skale-skills --skill about-skale
 npx -y skills add skalenetwork/skale-skills --skill deploy-to-skale
 npx -y skills add skalenetwork/skale-skills --skill programmable-privacy
+npx -y skills add skalenetwork/skale-skills --skill skale-bridging
 npx -y skills add skalenetwork/skale-skills --skill x402-on-skale
 npx -y skills add skalenetwork/skale-skills --skill ima-bridging-on-skale
 npx -y skills add skalenetwork/skale-skills --skill skale-cli
@@ -32,6 +33,7 @@ npx -y skills add skalenetwork/skills --skill '*' --agent '*' -y
 - `about-skale`: Learn about SKALE Network architecture, chain types, and gas models
 - `deploy-to-skale`: Deploy contracts to SKALE chains with chain selection, RNG, bridge, and deployment setup
 - `programmable-privacy`: BITE Protocol for encrypted transactions, CTX, re-encryption, and confidential tokens on SKALE
+- `skale-bridging`: Uses Trails bridge API and SKALE Native bridge to allow bridging from multiple chains (ex: polygon, base, optimism, monad and more) into SKALE Base
 - `x402-on-skale`: Build AI agents with x402 payments on SKALE - facilitator setup and payment middleware
 - `ima-bridging-on-skale`: Programmatic IMA (Inter-chain Messaging Agent) bridging for SKALE chains
 - `skale-cli`: Operational command playbooks for SKALE CLI usage
